@@ -27,7 +27,9 @@ public class UsuarioMapper {
                 usuario.getNombres(),
                 usuario.getApellidos(),
                 usuario.getTelefono(),
-                usuario.getEmail()
+                usuario.getEmail(),
+                usuario.getCreatedAt(),
+                usuario.getUpdatedAt()
         );
         return usuarioResponseDto;
     }

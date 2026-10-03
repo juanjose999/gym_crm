@@ -1,6 +1,7 @@
 package com.gymAdmin.service.dtos;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public record UsuarioResponseDto(
         @NotBlank(message = "Los nombres son obligatorios")
@@ -16,7 +17,11 @@ public record UsuarioResponseDto(
 
         @NotBlank(message = "El correo electrónico es obligatorio")
         @Email(message = "Debe proporcionar un correo electrónico válido")
-        String email
+        String email,
+
+        LocalDateTime createdDate,
+
+        LocalDateTime updatedDate
 
 ) {
 
