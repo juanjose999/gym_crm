@@ -24,7 +24,7 @@ public class Membresia {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "plan_id", nullable = false)
-    private PlanMembresia plan;
+    private Plan plan;
 
     @Column(nullable = false)
     private LocalDate fecha_inicio;

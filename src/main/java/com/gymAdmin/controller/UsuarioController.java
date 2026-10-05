@@ -1,6 +1,7 @@
 package com.gymAdmin.controller;
 
 import com.gymAdmin.entity.Usuario;
+import com.gymAdmin.service.dtos.UsuarioLoginDto;
 import com.gymAdmin.service.dtos.UsuarioRequestDto;
 import com.gymAdmin.service.UsuarioService;
 import com.gymAdmin.service.dtos.UsuarioResponseDto;
@@ -23,20 +24,17 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
-    @PostMapping
-    public ResponseEntity<ResponseCustom> save(@RequestBody UsuarioRequestDto requestDTO) {
-        UsuarioResponseDto savedUser = usuarioService.save(requestDTO);
+    @PostMapping("/singup")
+    public ResponseEntity<ResponseCustom> save(@RequestBody UsuarioRequestDto requestDto) {
+        UsuarioResponseDto savedUser = usuarioService.save(requestDto);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 ResponseCustom.success(savedUser)
         );
     }
 
-    @GetMapping
-    public ResponseEntity<ResponseCustom> findByEmail(@RequestParam
-                                                          @NotBlank(message = "El correo no puede estar vacío")
-                                                          @Email(message = "Debe proporcionar un formato de correo válido")
-                                                          String email) {
+    @GetMapping("/login")
+    public ResponseEntity<ResponseCustom> findByEmail(@RequestParam String email) {
         UsuarioResponseDto userfind = usuarioService.findByEmail(email);
         return ResponseEntity.ok(
                 ResponseCustom.success(userfind)

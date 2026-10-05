@@ -5,13 +5,13 @@ import lombok.*;
 import java.util.List;
 
 @Entity
-@Table(name = "planes_membresia")
+@Table(name = "planes")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PlanMembresia {
+public class Plan {
 
     @Id
     private Long id;
