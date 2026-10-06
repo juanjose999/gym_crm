@@ -12,9 +12,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PagoMembresia {
+public class PagoMembresia extends AuditableEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -25,9 +26,7 @@ public class PagoMembresia {
     private Double monto;
 
     @Column(nullable = false)
-    private StringNode metodo_pago;
+    private String metodo_pago;
 
-    @Column(nullable = false)
-    private LocalDateTime fecha_pago;
 
 }

@@ -1,6 +1,8 @@
 package com.gymAdmin.exception;
 
 import com.gymAdmin.controller.ResponseCustom;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -50,5 +52,19 @@ public class GlobalExceptionHandler {
         // En producción podrías loguear el error real: ex.printStackTrace();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ResponseCustom.error("Ocurrió un error interno en el servidor: " + ex.getMessage()));
+    }
+
+
+    @ExceptionHandler(ExpiredJwtException.class )
+    public ResponseEntity<ResponseCustom> handleExpired(Exception ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ResponseCustom.error("Token expirado"));
+    }
+
+
+    @ExceptionHandler(SignatureException.class)
+    public ResponseEntity<ResponseCustom> handleBadSignatura(Exception ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ResponseCustom.error("Firma invalida"));
     }
 }

@@ -13,9 +13,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Membresia {
+public class Membresia extends AuditableEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -32,14 +33,7 @@ public class Membresia {
     @Column(nullable = false)
     private LocalDate fecha_fin;
 
-    @Column(nullable = false)
-    private Double precio;
-
-    @Column(nullable = false)
-    private LocalDateTime fecha_creacion;
-
     @OneToMany(mappedBy = "membresia")
     private List<PagoMembresia> pagos;
-
 
 }
