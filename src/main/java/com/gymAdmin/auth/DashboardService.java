@@ -63,17 +63,23 @@ public class DashboardService {
         // Desde el inicio del mes anterior se cubre la comparativa mensual y el gráfico de 7 días
         LocalDateTime desde = haceUnMes.withDayOfMonth(1).atStartOfDay();
 
-        // Ventas = órdenes de productos; ingresos = ventas + pagos de membresías
-        Map<LocalDate, BigDecimal> ventasPorDia = new HashMap<>();
-        ordenRepository.findAllByUsuarioGimnasioIdAndCreatedAtGreaterThanEqual(gimnasioId, desde)
-                .forEach(o -> ventasPorDia.merge(o.getCreatedAt().toLocalDate(), o.getTotal(), BigDecimal::add));
-
-        Map<LocalDate, BigDecimal> ingresosPorDia = new HashMap<>(ventasPorDia);
-        membresiaRepository.findPagosByGimnasioIdDesde(gimnasioId, desde)
-                .forEach(p -> ingresosPorDia.merge(p.getCreatedAt().toLocalDate(), p.getMonto(), BigDecimal::add));
-
         List<Membresia> membresias = membresiaRepository.findAllByUsuarioGimnasioIdOrderByFechaInicioDesc(gimnasioId);
         List<Membresia> vigentes = vigentesEn(membresias, hoy);
+
+        // Ventas = órdenes de productos + membresías creadas (precio del plan, estén pagadas o no);
+        // ingresos = órdenes de productos + pagos de membresías
+        Map<LocalDate, BigDecimal> ventasPorDia = new HashMap<>();
+        Map<LocalDate, BigDecimal> ingresosPorDia = new HashMap<>();
+        ordenRepository.findAllByUsuarioGimnasioIdAndCreatedAtGreaterThanEqual(gimnasioId, desde)
+                .forEach(o -> {
+                    ventasPorDia.merge(o.getCreatedAt().toLocalDate(), o.getTotal(), BigDecimal::add);
+                    ingresosPorDia.merge(o.getCreatedAt().toLocalDate(), o.getTotal(), BigDecimal::add);
+                });
+        membresias.stream()
+                .filter(m -> !m.getCreatedAt().isBefore(desde))
+                .forEach(m -> ventasPorDia.merge(m.getCreatedAt().toLocalDate(), m.getPlan().getPrecio(), BigDecimal::add));
+        membresiaRepository.findPagosByGimnasioIdDesde(gimnasioId, desde)
+                .forEach(p -> ingresosPorDia.merge(p.getCreatedAt().toLocalDate(), p.getMonto(), BigDecimal::add));
 
         return new DashboardResponse(
                 metricasSuperiores(gimnasioId, hoy, ventasPorDia, ingresosPorDia, membresias, vigentes),
