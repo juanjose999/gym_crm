@@ -1,5 +1,6 @@
 package com.gymAdmin.orden.dto;
 
+import com.gymAdmin.orden.EstadoItemOrden;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -22,7 +23,10 @@ public record OrdenRequest(
 
             @NotNull(message = "La cantidad es obligatoria")
             @Positive(message = "La cantidad debe ser mayor a 0")
-            Integer cantidad
+            Integer cantidad,
+
+            @NotNull(message = "El estado es obligatorio (PAGADO o DEUDA)")
+            EstadoItemOrden estado
     ) {
     }
 }

@@ -1,5 +1,7 @@
 package com.gymAdmin.orden.dto;
 
+import com.gymAdmin.orden.EstadoItemOrden;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,7 +20,8 @@ public record OrdenResponse(
             String productoNombre,
             Integer cantidad,
             BigDecimal precioUnitario,
-            BigDecimal subtotal
+            BigDecimal subtotal,
+            EstadoItemOrden estado
     ) {
     }
 }

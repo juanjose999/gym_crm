@@ -25,7 +25,8 @@ public final class OrdenMapper {
                 item.getProducto().getNombre(),
                 item.getCantidad(),
                 item.getPrecioUnitario(),
-                item.getSubtotal()
+                item.getSubtotal(),
+                item.getEstado()
         );
     }
 }

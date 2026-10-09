@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,26 +27,30 @@ public class OrdenService {
 
     /**
      * Registra una compra de un socio del gimnasio y descuenta el stock de cada producto.
-     * Si un producto se repite en la petición, sus cantidades se suman en un solo ítem.
+     * Si un producto se repite con el mismo estado, sus cantidades se suman en un solo ítem;
+     * con estados distintos (parte pagada, parte en deuda) quedan como ítems separados.
      */
     @Transactional
     public OrdenResponse crear(Long gimnasioId, OrdenRequest request) {
         Usuario socio = socioService.obtenerEntidad(gimnasioId, request.socioId());
 
-        Map<Long, Integer> cantidadPorProducto = request.items().stream()
+        Map<ClaveItem, Integer> cantidadPorItem = request.items().stream()
                 .collect(Collectors.toMap(
-                        OrdenRequest.ItemRequest::productoId,
+                        i -> new ClaveItem(i.productoId(), i.estado()),
                         OrdenRequest.ItemRequest::cantidad,
                         Integer::sum,
                         LinkedHashMap::new));
 
-        Map<Long, Producto> productos = productoService.obtenerEntidades(gimnasioId, cantidadPorProducto.keySet());
+        Set<Long> productoIds = cantidadPorItem.keySet().stream()
+                .map(ClaveItem::productoId)
+                .collect(Collectors.toSet());
+        Map<Long, Producto> productos = productoService.obtenerEntidades(gimnasioId, productoIds);
 
         Orden orden = new Orden(socio);
-        cantidadPorProducto.forEach((productoId, cantidad) -> {
-            Producto producto = productos.get(productoId);
+        cantidadPorItem.forEach((clave, cantidad) -> {
+            Producto producto = productos.get(clave.productoId());
             producto.descontarStock(cantidad);
-            orden.agregarItem(new ItemOrden(producto, cantidad));
+            orden.agregarItem(new ItemOrden(producto, cantidad, clave.estado()));
         });
 
         // flush para que los ids y fechas de auditoría estén disponibles en la respuesta
@@ -62,5 +67,8 @@ public class OrdenService {
         return ordenRepository.findAllByUsuarioIdOrderByCreatedAtDesc(socioId).stream()
                 .map(OrdenMapper::toResponse)
                 .toList();
+    }
+
+    private record ClaveItem(Long productoId, EstadoItemOrden estado) {
     }
 }
