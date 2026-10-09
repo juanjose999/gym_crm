@@ -18,6 +18,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -25,10 +26,11 @@ import java.nio.charset.StandardCharsets;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-@EnableConfigurationProperties(JwtProperties.class)
+@EnableConfigurationProperties({JwtProperties.class, RateLimitProperties.class})
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final RateLimitProperties rateLimitProperties;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -40,13 +42,19 @@ public class SecurityConfig {
                         .anyRequest().hasRole(Rol.ADMIN.name())
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // API JSON pura: ningún navegador debe cargarla como página ni embeberla
+                .headers(headers -> headers
+                        .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'none'; frame-ancestors 'none'"))
+                        .referrerPolicy(referrer -> referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER))
+                )
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, ex) ->
                                 writeError(response, HttpStatus.UNAUTHORIZED, "No autenticado o token inválido"))
                         .accessDeniedHandler((request, response, ex) ->
                                 writeError(response, HttpStatus.FORBIDDEN, "Acceso denegado"))
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(new RateLimitFilter(rateLimitProperties), JwtAuthenticationFilter.class);
 
         return http.build();
     }
@@ -65,7 +73,7 @@ public class SecurityConfig {
      * Los errores de seguridad ocurren en los filtros, fuera del alcance de GlobalExceptionHandler,
      * por eso se escribe aquí la misma estructura de ApiResponse.
      */
-    private static void writeError(HttpServletResponse response, HttpStatus status, String message) throws IOException {
+    static void writeError(HttpServletResponse response, HttpStatus status, String message) throws IOException {
         response.setStatus(status.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());

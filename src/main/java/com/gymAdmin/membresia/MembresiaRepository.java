@@ -2,7 +2,10 @@ package com.gymAdmin.membresia;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,4 +18,8 @@ public interface MembresiaRepository extends JpaRepository<Membresia, Long> {
 
     @EntityGraph(attributePaths = {"usuario", "plan"})
     List<Membresia> findAllByUsuarioIdOrderByFechaInicioDesc(Long usuarioId);
+
+    @Query("select p from PagoMembresia p where p.membresia.usuario.gimnasio.id = :gimnasioId and p.createdAt >= :desde")
+    List<PagoMembresia> findPagosByGimnasioIdDesde(@Param("gimnasioId") Long gimnasioId,
+                                                   @Param("desde") LocalDateTime desde);
 }

@@ -2,6 +2,7 @@ package com.gymAdmin.usuario;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,4 +19,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByEmailAndGimnasioIdAndRol(String email, Long gimnasioId, Rol rol);
 
     List<Usuario> findAllByGimnasioIdAndRolOrderByApellidosAscNombresAsc(Long gimnasioId, Rol rol);
+
+    long countByGimnasioIdAndRolAndCreatedAtGreaterThanEqual(Long gimnasioId, Rol rol, LocalDateTime desde);
 }

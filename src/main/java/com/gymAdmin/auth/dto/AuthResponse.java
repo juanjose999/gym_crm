@@ -5,7 +5,8 @@ import com.gymAdmin.usuario.dto.UsuarioResponse;
 public record AuthResponse(
         Tokens tokens,
         UsuarioResponse user,
-        GimnasioResumen gimnasio
+        GimnasioResumen gimnasio,
+        DashboardResponse dashboardResponse
 ) {
     public record Tokens(
             String accessToken,

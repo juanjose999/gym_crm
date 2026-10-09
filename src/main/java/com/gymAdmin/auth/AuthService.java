@@ -2,6 +2,7 @@ package com.gymAdmin.auth;
 
 import com.gymAdmin.auth.dto.AccesoSocioRequest;
 import com.gymAdmin.auth.dto.AuthResponse;
+import com.gymAdmin.auth.dto.DashboardResponse;
 import com.gymAdmin.auth.dto.LoginRequest;
 import com.gymAdmin.auth.dto.RefreshTokenRequest;
 import com.gymAdmin.gimnasio.Gimnasio;
@@ -25,10 +26,11 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final UsuarioService usuarioService;
     private final JwtService jwtService;
+    private final DashboardService dashboardService;
 
     @Transactional
     public AuthResponse registrarAdmin(RegistroAdminRequest request) {
-        return construirRespuesta(usuarioService.registrarAdmin(request));
+        return construirRespuestaConDashboard(usuarioService.registrarAdmin(request));
     }
 
     /**
@@ -38,7 +40,7 @@ public class AuthService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
-        return construirRespuesta(usuarioService.obtenerPorEmail(request.email()));
+        return construirRespuestaConDashboard(usuarioService.obtenerPorEmail(request.email()));
     }
 
     /**
@@ -46,15 +48,23 @@ public class AuthService {
      * y únicamente permite consultar /mi-cuenta.
      */
     public AuthResponse accesoSocio(AccesoSocioRequest request) {
-        return construirRespuesta(usuarioService.obtenerSocioPorEmail(request.email()));
+        return construirRespuesta(usuarioService.obtenerSocioPorEmail(request.email()), null);
     }
 
     public AuthResponse refrescar(RefreshTokenRequest request) {
         String email = jwtService.extractSubject(request.refreshToken(), TokenType.REFRESH);
-        return construirRespuesta(usuarioService.obtenerPorEmail(email));
+        return construirRespuesta(usuarioService.obtenerPorEmail(email), null);
     }
 
-    private AuthResponse construirRespuesta(Usuario usuario) {
+    /**
+     * Respuesta de signup/login: además de los tokens incluye el resumen del gimnasio
+     * para mostrarlo apenas el administrador ingresa.
+     */
+    private AuthResponse construirRespuestaConDashboard(Usuario usuario) {
+        return construirRespuesta(usuario, dashboardService.construir(usuario.getGimnasio().getId()));
+    }
+
+    private AuthResponse construirRespuesta(Usuario usuario, DashboardResponse dashboard) {
         Gimnasio gimnasio = usuario.getGimnasio();
         return new AuthResponse(
                 new AuthResponse.Tokens(
@@ -62,7 +72,8 @@ public class AuthService {
                         jwtService.generateRefreshToken(usuario.getEmail())
                 ),
                 UsuarioMapper.toResponse(usuario),
-                new AuthResponse.GimnasioResumen(gimnasio.getId(), gimnasio.getNombre())
+                new AuthResponse.GimnasioResumen(gimnasio.getId(), gimnasio.getNombre()),
+                dashboard
         );
     }
 }
